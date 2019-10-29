@@ -27,16 +27,16 @@
         </div>
         
         <div class="control">
-          <div class="dropdown is-right" :class="{'is-active': filter.menuVisible}">
+          <div class="dropdown is-right" :class="{'is-active': filter.visible}">
             <div class="dropdown-trigger">
-              <button @click="filter.menuVisible=!filter.menuVisible" class="button is-medium" id="filter-button" aria-haspopup="true" aria-controls="filter-dropdown" aria-label="Filterung">
-                <filter-active v-if="filter.present" />
+              <button @click="filter.visible=!filter.visible" class="button is-medium" id="filter-button" aria-haspopup="true" aria-controls="filter-dropdown" aria-label="Filterung">
+                <filter-active v-if="isFilterPresent" />
                 <filter-inactive v-else />
               </button>
             </div>
             <div class="dropdown-menu" id="filter-dropdown" role="menu">
               <div class="dropdown-content">
-                <button class="delete dropdown-delete" @click="filter.menuVisible = false"></button>
+                <button class="delete dropdown-delete" @click="filter.visible = false"></button>
                 <div class="dropdown-item">
                   <h2 class="subtitle">
                     Filter
@@ -75,7 +75,7 @@
                   </span>
                   <div class="field">
                     <div class="control is-expanded">
-                      <multiselect v-model="filter.topic.value" :options="filter.topic.options" :show-labels="false" placeholder="Auflage(n) auswählen" multiple></multiselect>
+                      <multiselect v-model="filter.topic.value" :options="filter.topic.options" :show-labels="false" placeholder="Auflagen durchsuchen" multiple></multiselect>
                     </div>
                   </div>
                 </div>
@@ -88,7 +88,20 @@
                   </span>
                   <div class="field">
                     <div class="control is-expanded">
-                      <multiselect v-model="filter.edition.value" :options="filter.edition.options" :show-labels="false" placeholder="Edition(en) auswählen" multiple></multiselect>
+                      <multiselect v-model="filter.edition.value" :options="filter.edition.options" :show-labels="false" placeholder="Editionen durchsuchen" multiple></multiselect>
+                    </div>
+                  </div>
+                </div>
+                <div class="dropdown-item">
+                  <span class="is-size-6">
+                    <label class="checkbox">
+                      <input type="checkbox" v-model="tagProperty">
+                      Vorgefertigte Suchbegriffe
+                    </label>
+                  </span>
+                  <div class="field">
+                    <div class="control is-expanded">
+                      <multiselect v-model="filter.tag.value" :options="filter.tag.options" :show-labels="false" placeholder="Tags durchsuchen" multiple></multiselect>
                     </div>
                   </div>
                 </div>
@@ -109,21 +122,21 @@
           <div class="control" v-for="token in searchTokens" :key="token">
             <div class="tags has-addons">
               <span class="tag is-dark"><search-icon/></span>
-              <span class="tag is-info">{{ token }}</span>
+              <span class="tag is-white">{{ token }}</span>
             </div>
           </div>
         </template>
         <div class="control" v-if="yearProperty">
           <div class="tags has-addons">
             <span class="tag is-dark">{{ filter.year.selector | selector }} </span>
-            <span class="tag is-info">{{ filter.year.value }}</span>
+            <span class="tag is-light is-info">{{ filter.year.value }}</span>
           </div>
         </div>
         <template v-if="topicProperty">
           <div class="control" v-for="topic in filter.topic.value" :key="topic">
             <div class="tags has-addons">
               <span class="tag is-dark"><folder-text-icon/></span>
-              <span class="tag is-info">{{ topic }}</span>
+              <span class="tag is-white">{{ topic }}</span>
             </div>
           </div>
         </template>
@@ -131,7 +144,15 @@
           <div class="control" v-for="topic in filter.edition.value" :key="topic">
             <div class="tags has-addons">
               <span class="tag is-dark"><numeric-icon/></span>
-              <span class="tag is-info">{{ topic }}</span>
+              <span class="tag is-white">{{ topic }}</span>
+            </div>
+          </div>
+        </template>
+        <template v-if="tagProperty">
+          <div class="control" v-for="topic in filter.tag.value" :key="topic">
+            <div class="tags has-addons">
+              <span class="tag is-dark"><tag-icon/></span>
+              <span class="tag is-white">{{ topic }}</span>
             </div>
           </div>
         </template>
@@ -141,6 +162,10 @@
         <p><strong>Bei der Auswertung des regulären Ausdrucks ist ein Fehler aufgetreten:</strong></p>
         <p><code>{{ regexErrorMessage }}</code></p>
       </div>
+      <div v-if="!isRouteQueryValid" class="notification is-warning">
+        <button class="delete" @click="isRouteQueryValid = true"></button>
+        <p><strong>Die Suchparameter aus der URL sind nicht gültig und konnten nicht übernommen werden. Die Suchmaske wurde zurückgesetzt.</strong></p>
+      </div>
     </div>
     </div>
   </div>
@@ -149,6 +174,7 @@
 <script>
 import Vue from 'vue'
 import _ from 'lodash'
+// import LZUTF8 from 'lzutf8'
 
 export default {
   name: 'SearchMask',
@@ -158,19 +184,23 @@ export default {
       regexErrorMessage: "",
       isRequesting: false,
       isRouteQueryValid: true,
+      query: "",
       filter: {
-        present: false,
-        menuVisible: true,
+        visible: false,
         year: {
           selector: 'lt',
           value: []
         },
         edition: {
-          options: ['1. Auflage', '2. Auflage'],
+          options: ['1. Auflage', '2. Auflage', '3. Auflage', '4. Auflage', '5. Auflage', '6. Auflage', '7. Auflage', '8. Auflage', '9. Auflage', '10. Auflage', '11. Auflage', '12. Auflage', '13. Auflage', '14. Auflage', '15. Auflage', '16. Auflage', '17. Auflage', '18. Auflage', '19. Auflage', '20. Auflage', '21. Auflage', '22. Auflage', '23. Auflage', '24. Auflage', '25. Auflage', '26. Auflage', '27. Auflage', '28. Auflage', '29. Auflage', '30. Auflage'],
           value: []
         },
         topic: {
           options: ['Thema A', 'Thema B'],
+          value: []
+        },
+        tag: {
+          options: ['1. Vorschlag', '2. Vorschlag', '3. Vorschlag', '4. Vorschlag', '5. Vorschlag', '6. Vorschlag', '7. Vorschlag', '8. Vorschlag', '9. Vorschlag', '10. Vorschlag', '11. Vorschlag', '12. Vorschlag', '13. Vorschlag', '14. Vorschlag', '15. Vorschlag', '16. Vorschlag', '17. Vorschlag', '18. Vorschlag', '19. Vorschlag', '20. Vorschlag', '21. Vorschlag', '22. Vorschlag', '23. Vorschlag', '24. Vorschlag', '25. Vorschlag', '26. Vorschlag', '27. Vorschlag', '28. Vorschlag', '29. Vorschlag', '30. Vorschlag'],
           value: []
         }
       }
@@ -180,23 +210,25 @@ export default {
     this.fromRoute(this.$route.query)
   },
   computed: {
+    isFilterPresent () {
+        return this.topicProperty || this.editionProperty || this.yearProperty || this.tagProperty
+    },
     isRegularExpression () {
         return this.validateRegExp(this.searchRequest)
     },
     searchRequest: {
       get: function () {
-        if (this.$route.query.q)
-          return this.$route.query.q
-        return ""
+        return this.query
       },
       set: function (value) {
+        this.query = value
         this.updateRoute(value, this.filter)
         this.executeRequest()
       }
     },
     searchTokens: {
       get: function () {
-        return this.searchRequest.split(' ')
+        return this.searchRequest.trim().replace(/\s\s+/g, ' ').split(' ')
       }
     },
     topicProperty: {
@@ -225,6 +257,15 @@ export default {
         if (!value)
           this.filter.year.value = []
       }
+    },
+    tagProperty: {
+      get () {
+        return this.filter.tag.value.length > 0
+      },
+      set (value) {
+        if (!value)
+          this.filter.tag.value = []
+      }
     }
   },
   watch: {
@@ -244,14 +285,26 @@ export default {
         Object.assign(object, {topic: JSON.stringify(filter.topic.value)})
       if (this.editionProperty)
         Object.assign(object, {edition: JSON.stringify(filter.edition.value)})
+      if (this.tagProperty)
+        Object.assign(object, {tag: JSON.stringify(filter.tag.value)})
       if (this.yearProperty)
         Object.assign(object, {selector: filter.year.selector, year: filter.year.value})
+      // let compressed = LZUTF8.compress(JSON.stringify(object),{outputEncoding: 'Base64'})
       if (!_.isEqual(this.$route.query, object)) {
-        this.$router.push({ path: '/', query: object})
-        console.log("EQUAL")
+        this.$router.push({ path: '/', query: object})//{c: compressed}
       }
     },
     fromRoute(query) {
+      // if (!compressed_query.c)
+      //   return
+      // var query;
+      // try {
+      //   query = JSON.parse(LZUTF8.decompress(compressed_query.c,{inputEncoding: 'Base64'}))
+      // } catch (error) {
+      //   this.isRouteQueryValid = false
+      //   return
+      // }
+
       let any = query.q
       if (query.year && query.selector && isNaN(query.year) && /(le|lt|gt|ge|eq)/.match(query.selector)) {
         this.filter.year.value = query.year 
@@ -272,11 +325,21 @@ export default {
           Vue.set(this.filter.topic, 'value', [...JSON.parse(query.topic)])
           any = true
         } catch (error) {
-          console.log(error)
           this.isRouteQueryValid = false
           Vue.set(this.filter.topic, 'value', [])
         }
       }
+      if (query.tag) {
+        try {
+          Vue.set(this.filter.tag, 'value', [...JSON.parse(query.tag)])
+          any = true
+        } catch (error) {
+          this.isRouteQueryValid = false
+          Vue.set(this.filter.tag, 'value', [])
+        }
+      }
+      if (query.q)
+        this.query = query.q
       if (any)
         this.executeRequest()
     },
@@ -334,6 +397,7 @@ export default {
 
 #search-container {
   padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 
 .hero-body {

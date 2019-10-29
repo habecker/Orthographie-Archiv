@@ -34,7 +34,7 @@
         </div>
       </div>
     </div>
-    <a class="navbar-item" href="https://github.com/habecker/orthographie" aria-label="Source-Code">
+    <a class="navbar-item" href="https://github.com/habecker/Orthographiearchiv" aria-label="Source-Code">
       <github-icon/>
     </a>
   </div>
