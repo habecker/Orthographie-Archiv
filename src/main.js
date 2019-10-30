@@ -3,6 +3,7 @@ import App from './App.vue'
 import './registerServiceWorker'
 import router from './router'
 import store from './store'
+import Modal from './components/Modal.vue'
 import './../node_modules/jquery/dist/jquery.min.js'
 import './../node_modules/bulma/css/bulma.min.css'
 import 'vue-material-design-icons/styles.css'
@@ -40,6 +41,8 @@ Vue.component('csv-icon', Table)
 Vue.component('filter-active', Filter)
 Vue.component('filter-inactive', FilterOutline)
 Vue.component('multiselect', Multiselect)
+
+Vue.component('modal', Modal)
 
 Vue.filter('selector', function (value) {
   if (!value) return ''
