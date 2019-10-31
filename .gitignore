@@ -19,3 +19,10 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+
+**/*.rtf
+**/*.meta
+*.db
+venv/
+
+__pycache__/

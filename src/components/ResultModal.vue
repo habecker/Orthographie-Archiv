@@ -1,5 +1,5 @@
 <template>
-    <modal :value="value" @cancel="$emit('cancel')">
+    <modal v-model="value" @cancel="$emit('cancel')">
         <template v-slot:title>HELO</template>
         <template v-slot:content></template>
         <template v-slot:footer></template>
