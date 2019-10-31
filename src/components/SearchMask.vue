@@ -23,20 +23,20 @@
             <regexp-icon v-if="isRegularExpression"/>
             <search-icon v-else/>
           </span>
-          <progress v-if="isRequesting" class="progress is-small is-info" max="100">15%</progress>
+          <progress class="progress is-small is-info" max="100" :class="{'opaque': !$store.state.searchActive}"></progress>
         </div>
         
         <div class="control">
-          <div class="dropdown is-right" :class="{'is-active': filter.visible}">
+          <div class="dropdown is-right" :class="{'is-active': filter_visible}">
             <div class="dropdown-trigger">
-              <button @click="filter.visible=!filter.visible" class="button is-medium" id="filter-button" aria-haspopup="true" aria-controls="filter-dropdown" aria-label="Filterung">
+              <button @click="filter_visible=!filter_visible" class="button is-medium" id="filter-button" aria-haspopup="true" aria-controls="filter-dropdown" aria-label="Filterung">
                 <filter-active v-if="isFilterPresent" />
                 <filter-inactive v-else />
               </button>
             </div>
             <div class="dropdown-menu" id="filter-dropdown" role="menu">
               <div class="dropdown-content">
-                <button class="delete dropdown-delete" @click="filter.visible = false"></button>
+                <button class="delete dropdown-delete" @click="filter_visible = false"></button>
                 <div class="dropdown-item">
                   <h2 class="subtitle">
                     Filter
@@ -176,17 +176,21 @@ import Vue from 'vue'
 import _ from 'lodash'
 // import LZUTF8 from 'lzutf8'
 
+const SEARCH_INTERVAL = 2000
+
 export default {
   name: 'SearchMask',
   data() {
     return {
       hideWelcome: false,
       regexErrorMessage: "",
-      isRequesting: false,
       isRouteQueryValid: true,
       query: "",
+      filter_visible: false,
+      lastRequest: 0,
+      didRequest: false,
+      now: 0,
       filter: {
-        visible: false,
         year: {
           selector: 'lt',
           value: []
@@ -207,9 +211,19 @@ export default {
     }
   },
   mounted () {
+    let self = this
+    setInterval(function () {
+        self.now = Date.now()
+    }, 1000)
     this.fromRoute(this.$route.query)
   },
   computed: {
+    allowRequest() {
+      return this.now - this.lastRequest > SEARCH_INTERVAL
+    },
+    hasExpression () {
+        return this.searchRequest && this.searchRequest.length > 0
+    },
     isFilterPresent () {
         return this.topicProperty || this.editionProperty || this.yearProperty || this.tagProperty
     },
@@ -223,12 +237,14 @@ export default {
       set: function (value) {
         this.query = value
         this.updateRoute(value, this.filter)
-        this.executeRequest()
+        if (value && value.trim().length > 0) {
+          this.executeRequest(true)
+        }
       }
     },
     searchTokens: {
       get: function () {
-        return this.searchRequest.trim().replace(/\s\s+/g, ' ').split(' ')
+        return _.uniq(this.searchRequest.trim().replace(/\s\s+/g, ' ').split(' '))
       }
     },
     topicProperty: {
@@ -272,8 +288,12 @@ export default {
     filter: {
       handler() {
         this.updateRoute(this.searchRequest, this.filter)
+        this.executeRequest(true)
       },
       deep: true
+    },
+    allowRequest: function () {
+      this.executeRequest(false)
     }
   },
   methods: {
@@ -305,16 +325,13 @@ export default {
       //   return
       // }
 
-      let any = query.q
       if (query.year && query.selector && isNaN(query.year) && /(le|lt|gt|ge|eq)/.match(query.selector)) {
         this.filter.year.value = query.year 
         this.filter.year.selector = query.selector
-        any = true
       }
       if (query.edition) {
         try {
           this.filter.edition.value = _.values(JSON.parse(query.edition))
-          any = true
         } catch (error) {
           this.isRouteQueryValid = false
           Vue.set(this.filter.edition, 'value', [])
@@ -323,7 +340,6 @@ export default {
       if (query.topic) {
         try {
           Vue.set(this.filter.topic, 'value', [...JSON.parse(query.topic)])
-          any = true
         } catch (error) {
           this.isRouteQueryValid = false
           Vue.set(this.filter.topic, 'value', [])
@@ -332,7 +348,6 @@ export default {
       if (query.tag) {
         try {
           Vue.set(this.filter.tag, 'value', [...JSON.parse(query.tag)])
-          any = true
         } catch (error) {
           this.isRouteQueryValid = false
           Vue.set(this.filter.tag, 'value', [])
@@ -340,8 +355,6 @@ export default {
       }
       if (query.q)
         this.query = query.q
-      if (any)
-        this.executeRequest()
     },
     validateRegExp (pattern) {
       let validate =  pattern.length > 2 && (pattern[0] == '/') && (pattern[pattern.length - 1] == '/')
@@ -350,19 +363,40 @@ export default {
         this.regexErrorMessage = ''
       } catch (error) {
         this.regexErrorMessage = error.message
-        this.isRequesting = false
       }
       return validate
     },
-    executeRequest () {
-      if (this.searchRequest.length > 0) {
-        this.hideWelcome = true
-        this.isRequesting = true
-        
-      } else {
-        this.isRequesting = false
-        //delete this.$route.query.q
+    executeRequest (force) {
+      if (!this.hasExpression && !this.isFilterPresent) {
+        this.$store.commit('search/clear')
+        return
       }
+      if (force) {
+        this.didRequest = false
+        this.$store.commit('search/setActive')
+      }
+      if (this.didRequest) {
+        return
+      }
+      if (!this.allowRequest) {
+        this.didRequest = false
+        return
+      }
+      this.lastRequest = Date.now()
+      this.didRequest = true
+      this.hideWelcome = true
+      // import api from '@/api/search'
+
+      this.$store.dispatch('search/request', {
+          "filter": {
+              "year": ["gt", 2007]
+          },
+          "tags": [],
+          "expression": "[A-Za-z0-9]+",
+          "is_regex": true,
+          "orderBy": "year",
+          "ordering": "ASC"
+      })
     }
   }
 }
@@ -442,6 +476,9 @@ a {
   color: #42b983;
 }
 
+.opaque {
+  opacity: 0;
+}
 </style>
 
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>

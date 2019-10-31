@@ -23,6 +23,7 @@ import BullseyeArrow from 'vue-material-design-icons/BullseyeArrow.vue'
 import SortAscending from 'vue-material-design-icons/SortAscending.vue'
 import SortDescending from 'vue-material-design-icons/SortDescending.vue'
 import Table from 'vue-material-design-icons/Table.vue'
+import _ from 'lodash';    
 
 Vue.config.productionTip = false
 Vue.component('github-icon', GithubCircle)
@@ -60,6 +61,10 @@ Vue.filter('selector', function (value) {
       return '≥'
   }
 })
+
+window.store = store
+
+Object.defineProperty(Vue.prototype, '$_', { value: _ });
 
 new Vue({
   router,
