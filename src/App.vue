@@ -46,3 +46,10 @@ html,body{
   }
 }
 </style>
+
+<style lang="sass">
+  [data-tooltip]
+      &::before,
+      &::after
+          font-size: 0.6rem !important
+</style>

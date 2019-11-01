@@ -6,6 +6,8 @@ import store from './store'
 import Modal from './components/Modal.vue'
 import './../node_modules/jquery/dist/jquery.min.js'
 import './../node_modules/bulma/css/bulma.min.css'
+import './../node_modules/bulma-tooltip/dist/css/bulma-tooltip.min.css'
+import './../node_modules/bulma-checkradio/dist/css/bulma-checkradio.min.css'
 import 'vue-material-design-icons/styles.css'
 import GithubCircle from 'vue-material-design-icons/GithubCircle.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
@@ -24,6 +26,7 @@ import SortAscending from 'vue-material-design-icons/SortAscending.vue'
 import SortDescending from 'vue-material-design-icons/SortDescending.vue'
 import Table from 'vue-material-design-icons/Table.vue'
 import _ from 'lodash';    
+import axios from 'axios'
 
 Vue.config.productionTip = false
 Vue.component('github-icon', GithubCircle)
@@ -62,9 +65,29 @@ Vue.filter('selector', function (value) {
   }
 })
 
+
+Vue.filter('maxnchars', function (value, n) {
+  if (!value) return ''
+  if (value.length <= n)
+    return value
+  return value.substring(0, n) + '…'
+})
+
+Vue.filter('cleanText', function (value) {
+  if (!value) return ''
+  return value.replace(/[_;*]+/g, '')
+})
+
 window.store = store
 
 Object.defineProperty(Vue.prototype, '$_', { value: _ });
+
+axios.get('corpus_meta.json').then((result) => {
+  store.commit('corpusMeta', result.data)
+}).catch((error) => {
+  store.commit('corpusError', 'corpus_meta.json: ' + error)
+})
+
 
 new Vue({
   router,

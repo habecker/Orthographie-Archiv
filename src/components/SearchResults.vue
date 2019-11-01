@@ -1,17 +1,17 @@
 <template>
   <div v-if="$store.state.searchRequest" class="container is-fullhd">
     <div class="box">
-        <div class="columns is-size-7 has-text-centered is-vcentered">
+        <div class="columns is-size-8 has-text-centered is-vcentered">
             <div class="column is-3">
                 <div class="is-pulled-left">{{ $store.state.results_count }} Treffer</div>
             </div>
             <div class="column is-6">
-                <button class="button is-small"><span class="icon"><csv-icon/></span> <span>Export</span></button>
+                <button class="button is-small"><span class="icon"><csv-icon aria-label="CSV-Export"/></span> <span>Export</span></button>
             </div>
-            <div class="column is-3">
+            <div class="column is-3 is-clearfix">
                 <div class="field is-grouped is-pulled-right">
                     <div class="control is-marginless">
-                        <button class="button is-small"><sort-asc-icon/></button>
+                        <button class="button is-small"><sort-asc-icon aria-label="Absteigende Sortierung"/></button>
                     </div>
                     <div class="control is-expanded">
                         <div class="select is-small">
@@ -25,7 +25,7 @@
                 </div>
             </div>
         </div>
-        <div v-for="r in $store.state.results" :key="r['id']" :id="'row_'+r['id']" class="columns is-vcentered result-columns">
+        <div v-for="r in $store.state.results" :key="r['id']" :id="'row_'+r['id']" class="columns is-vcentered result-columns is-size-8">
             <div class="column is-4">
                 <div class="field is-grouped is-grouped-multiline">
                     <div class="control">
@@ -37,58 +37,41 @@
                     <div class="control">
                         <span class="tags has-addons">
                             <span class="tag is-dark"><numeric-icon/></span>
-                            <span class="tag is-light is-success">{{ r['edition_text'] }}</span>
+                            <span class="tag is-light" :class="{'has-tooltip-bottom': r['edition_text'].length > 15}" :data-tooltip="r['edition_text']">{{ r['edition_text'] | maxnchars(15) }}</span>
                         </span>
                     </div>
                     <div class="control">
                         <span class="tags has-addons">
                             <span class="tag is-dark"><folder-text-icon/></span>
-                            <span class="tag is-light">{{ r['topic'] }}</span>
+                            <span class="tag is-light" :class="{'has-tooltip-bottom': r['topic'].length > 20}" :data-tooltip="r['topic']">{{ r['topic'] | maxnchars(20) }}</span>
                         </span>
                     </div>
                 </div>
             </div>
             <div class="column is-3 has-text-centered is-hidden-touch">        
                 <div class="field is-grouped is-grouped-multiline">
-                    <div class="control">
+                    <div class="control" v-for="tag in r['tags']" :key="tag">
                         <span class="tags has-addons">
                             <span class="tag is-dark"><tag-icon/></span>
-                            <span class="tag is-secondary">A</span>
-                        </span>
-                    </div>
-                    <div class="control">
-                        <span class="tags has-addons">
-                            <span class="tag is-dark"><tag-icon/></span>
-                            <span class="tag is-secondary">B</span>
-                        </span>
-                    </div>
-                    <div class="control">
-                        <span class="tags has-addons">
-                            <span class="tag is-dark"><tag-icon/></span>
-                            <span class="tag is-secondary">C</span>
+                            <span class="tag is-secondary">{{ tag }}</span>
                         </span>
                     </div>
                 </div>
                 
-                <p class="is-size-7"><strong>{{ r['file'] }}</strong></p>  
+                <p class="is-size-8"  :class="{'has-tooltip-bottom': r['file'].length > 40}" :data-tooltip="r['file']"><strong>{{ r['file'] | maxnchars(40)}}</strong></p>  
             </div>
-            <div class="column is-3 has-text-justified is-size-7 is-hidden-touch">
-                <p v-html="dummyText"></p>
+            <div class="column is-3 has-text-justified is-size-8 is-hidden-touch">
+                <p>{{ r['text'] | cleanText | maxnchars(200)}}</p>
             </div>
-            <div class="column is-6 has-text-justified is-size-7 is-hidden-desktop">
-                <p class="is-size-7"><strong>{{ r['file'] }}</strong></p>
-                <p v-html="dummyText"></p>
+            <div class="column is-6 has-text-justified is-size-8 is-hidden-desktop">
+                <p class="is-size-8"  :class="{'has-tooltip-bottom': r['file'].length > 40}" :data-tooltip="r['file']"><strong>{{ r['file'] | maxnchars(40)}}</strong></p>
+                <p>{{ r['text'] | cleanText | maxnchars(200)}}</p>
             </div>
             <div class="column is-2 is-clearfix">
                 <div class="field is-grouped is-expanded is-pulled-right">
                     <div class="control">
-                        <button class="button is-light is-inline-block">
-                            <details-icon></details-icon> <span class="is-hidden-tablet">Details</span>
-                        </button>
-                    </div>
-                    <div class="control">
-                        <button class="button is-light is-inline-block">
-                            <download-icon></download-icon> <span class="is-hidden-tablet">Herunterladen</span>
+                        <button class="button is-light is-inline-block" @click="currentResult = r">
+                            <details-icon></details-icon> Details
                         </button>
                     </div>
                 </div>
@@ -139,6 +122,9 @@ export default {
 <style scoped lang="scss">
 .result-columns {
     border-bottom: solid 2px #fafafa;
+}
+.is-size-8 {
+    font-size:0.75rem;
 }
 </style>
 <style src="vue-multiselect/dist/vue-multiselect.min.css"></style>

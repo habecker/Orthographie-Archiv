@@ -20,13 +20,14 @@
         <div class="control is-medium has-icons-left is-expanded">
           <input class="input is-medium" type="text" placeholder="Volltextsuche" v-model="searchRequest">
           <span class="icon is-medium is-left">
-            <regexp-icon v-if="isRegularExpression"/>
-            <search-icon v-else/>
+            <regexp-icon aria-label="Regulärer Ausdruck" v-if="isRegularExpression"/>
+            <search-icon  aria-label="Normale Suche" v-else/>
           </span>
-          <progress class="progress is-small is-info" max="100" :class="{'opaque': !$store.state.searchActive}"></progress>
+          <progress v-if="$store.state.errorOccured" class="progress is-small is-danger" max="100" :class="{'opaque': !$store.state.searchActive}" value="100"></progress>
+          <progress v-else class="progress is-small is-info" max="100" :class="{'opaque': !$store.state.searchActive}"></progress>
         </div>
         
-        <div class="control">
+        <div v-if="$store.state.corpusMeta" class="control">
           <div class="dropdown is-right" :class="{'is-active': filter_visible}">
             <div class="dropdown-trigger">
               <button @click="filter_visible=!filter_visible" class="button is-medium" id="filter-button" aria-haspopup="true" aria-controls="filter-dropdown" aria-label="Filterung">
@@ -44,10 +45,10 @@
                 </div>
                 <div class="dropdown-item">
                   <span class="is-size-6">
-                    <label class="checkbox">
-                      <input type="checkbox" v-model="yearProperty">
-                      Nach Jahren
-                    </label>
+                    <div class="field is-inline">
+                      <input class="is-checkradio is-circle is-small is-info" id="yearCheckbox" type="checkbox" v-model="yearProperty">
+                      <label for="yearCheckbox">Nach Jahren</label>
+                    </div>
                   </span>
                   <div class="field is-grouped">
                     <div class="control">
@@ -68,40 +69,40 @@
                 </div>
                 <div class="dropdown-item">
                   <span class="is-size-6">
-                    <label class="checkbox">
-                      <input type="checkbox" v-model="topicProperty">
-                      Nach Thema
-                    </label>
+                    <div class="field is-inline">
+                      <input class="is-checkradio is-circle is-small is-info" id="topicCheckbox" type="checkbox" v-model="topicProperty">
+                      <label for="topicCheckbox">Nach Thema</label>
+                    </div>
                   </span>
                   <div class="field">
                     <div class="control is-expanded">
-                      <multiselect v-model="filter.topic.value" :options="filter.topic.options" :show-labels="false" placeholder="Auflagen durchsuchen" multiple></multiselect>
+                      <multiselect v-model="filter.topic.value" :options=" $store.state.corpusMeta.topics" :show-labels="false" placeholder="Auflagen durchsuchen" multiple></multiselect>
                     </div>
                   </div>
                 </div>
                 <div class="dropdown-item">
                   <span class="is-size-6">
-                    <label class="checkbox">
-                      <input type="checkbox" v-model="editionProperty">
-                      Nach Auflage
-                    </label>
+                    <div class="field is-inline">
+                      <input class="is-checkradio is-circle is-small is-info" id="editionCheckbox" type="checkbox" v-model="editionProperty">
+                      <label for="editionCheckbox">Nach Auflage</label>
+                    </div>
                   </span>
                   <div class="field">
                     <div class="control is-expanded">
-                      <multiselect v-model="filter.edition.value" :options="filter.edition.options" :show-labels="false" placeholder="Editionen durchsuchen" multiple></multiselect>
+                      <multiselect v-model="filter.edition.value" :options=" $store.state.corpusMeta.editions" :show-labels="false" placeholder="Editionen durchsuchen" multiple></multiselect>
                     </div>
                   </div>
                 </div>
                 <div class="dropdown-item">
                   <span class="is-size-6">
-                    <label class="checkbox">
-                      <input type="checkbox" v-model="tagProperty">
-                      Vorgefertigte Suchbegriffe
-                    </label>
+                    <div class="field is-inline">
+                      <input class="is-checkradio is-circle is-small is-info" id="tagCheckbox" type="checkbox" v-model="tagProperty">
+                      <label for="tagCheckbox">Vorgefertigte Suchbegriffe</label>
+                    </div>
                   </span>
                   <div class="field">
                     <div class="control is-expanded">
-                      <multiselect v-model="filter.tag.value" :options="filter.tag.options" :show-labels="false" placeholder="Tags durchsuchen" multiple></multiselect>
+                      <multiselect v-model="filter.tag.value" :options=" $store.state.corpusMeta.tags" :show-labels="false" placeholder="Tags durchsuchen" multiple></multiselect>
                     </div>
                   </div>
                 </div>
@@ -114,14 +115,14 @@
         <!-- <span class="tag is-">One <button class="delete"></button></span> -->
         <div class="control" v-if="isRegularExpression">
           <div class="tags has-addons">
-            <span class="tag is-dark"><regexp-icon/></span>
+            <span class="tag is-dark" aria-label="Regulärer Ausdruck"><regexp-icon/></span>
             <span class="tag is-warning">{{ searchRequest }}</span>
           </div>
         </div>
         <template v-else-if="searchRequest.length > 0">
           <div class="control" v-for="token in searchTokens" :key="token">
             <div class="tags has-addons">
-              <span class="tag is-dark"><search-icon/></span>
+              <span class="tag is-dark" aria-label="Normale Suche"><search-icon/></span>
               <span class="tag is-white">{{ token }}</span>
             </div>
           </div>
@@ -135,13 +136,13 @@
         <template v-if="topicProperty">
           <div class="control" v-for="topic in filter.topic.value" :key="topic">
             <div class="tags has-addons">
-              <span class="tag is-dark"><folder-text-icon/></span>
+              <span class="tag is-dark" aria-label="Thema"><folder-text-icon/></span>
               <span class="tag is-white">{{ topic }}</span>
             </div>
           </div>
         </template>
         <template v-if="editionProperty">
-          <div class="control" v-for="topic in filter.edition.value" :key="topic">
+          <div class="control" aria-label="Auflage" v-for="topic in filter.edition.value" :key="topic">
             <div class="tags has-addons">
               <span class="tag is-dark"><numeric-icon/></span>
               <span class="tag is-white">{{ topic }}</span>
@@ -149,7 +150,7 @@
           </div>
         </template>
         <template v-if="tagProperty">
-          <div class="control" v-for="topic in filter.tag.value" :key="topic">
+          <div class="control" aria-label="Begriff" v-for="topic in filter.tag.value" :key="topic">
             <div class="tags has-addons">
               <span class="tag is-dark"><tag-icon/></span>
               <span class="tag is-white">{{ topic }}</span>
@@ -162,9 +163,17 @@
         <p><strong>Bei der Auswertung des regulären Ausdrucks ist ein Fehler aufgetreten:</strong></p>
         <p><code>{{ regexErrorMessage }}</code></p>
       </div>
+      <div v-if="$store.state.corpusError" class="notification is-danger">
+        <p><strong>Beim Laden der Anwendung ist ein Fehler aufgetreten:</strong></p>
+        <p><code>{{ $store.state.corpusError }}</code></p>
+      </div>
       <div v-if="!isRouteQueryValid" class="notification is-warning">
         <button class="delete" @click="isRouteQueryValid = true"></button>
         <p><strong>Die Suchparameter aus der URL sind nicht gültig und konnten nicht übernommen werden. Die Suchmaske wurde zurückgesetzt.</strong></p>
+      </div>
+      <div v-if="$store.state.errorOccured" class="notification is-danger">
+        <p><strong>Bei der Auswertung der Suchanfrage ist ein Fehler aufgetreten:</strong></p>
+        <p><code>{{ $store.state.errorOccured }}</code></p>
       </div>
     </div>
     </div>
@@ -176,7 +185,8 @@ import Vue from 'vue'
 import _ from 'lodash'
 // import LZUTF8 from 'lzutf8'
 
-const SEARCH_INTERVAL = 2000
+const SEARCH_INTERVAL = 1000
+const REQUEST_LIMIT_INTERVAL = 500 // 2 Hz
 
 export default {
   name: 'SearchMask',
@@ -188,23 +198,23 @@ export default {
       query: "",
       filter_visible: false,
       lastRequest: 0,
+      lastSearchRequestChange: 0,
       didRequest: false,
       now: 0,
       filter: {
+        ordering: 'ASC',
+        orderBy: 'year',
         year: {
           selector: 'lt',
-          value: []
+          value: null
         },
         edition: {
-          options: ['1. Auflage', '2. Auflage', '3. Auflage', '4. Auflage', '5. Auflage', '6. Auflage', '7. Auflage', '8. Auflage', '9. Auflage', '10. Auflage', '11. Auflage', '12. Auflage', '13. Auflage', '14. Auflage', '15. Auflage', '16. Auflage', '17. Auflage', '18. Auflage', '19. Auflage', '20. Auflage', '21. Auflage', '22. Auflage', '23. Auflage', '24. Auflage', '25. Auflage', '26. Auflage', '27. Auflage', '28. Auflage', '29. Auflage', '30. Auflage'],
           value: []
         },
         topic: {
-          options: ['Thema A', 'Thema B'],
           value: []
         },
         tag: {
-          options: ['1. Vorschlag', '2. Vorschlag', '3. Vorschlag', '4. Vorschlag', '5. Vorschlag', '6. Vorschlag', '7. Vorschlag', '8. Vorschlag', '9. Vorschlag', '10. Vorschlag', '11. Vorschlag', '12. Vorschlag', '13. Vorschlag', '14. Vorschlag', '15. Vorschlag', '16. Vorschlag', '17. Vorschlag', '18. Vorschlag', '19. Vorschlag', '20. Vorschlag', '21. Vorschlag', '22. Vorschlag', '23. Vorschlag', '24. Vorschlag', '25. Vorschlag', '26. Vorschlag', '27. Vorschlag', '28. Vorschlag', '29. Vorschlag', '30. Vorschlag'],
           value: []
         }
       }
@@ -214,15 +224,18 @@ export default {
     let self = this
     setInterval(function () {
         self.now = Date.now()
-    }, 1000)
+    }, REQUEST_LIMIT_INTERVAL)
     this.fromRoute(this.$route.query)
   },
   computed: {
     allowRequest() {
-      return this.now - this.lastRequest > SEARCH_INTERVAL
+      return this.now - this.lastRequest > REQUEST_LIMIT_INTERVAL && this.now - this.lastSearchRequestChange > SEARCH_INTERVAL
+    },
+    anyPresent () {
+        return this.hasExpression || this.isFilterPresent
     },
     hasExpression () {
-        return this.searchRequest && this.searchRequest.length > 0
+        return this.searchRequest && this.searchRequest.trim().length > 0
     },
     isFilterPresent () {
         return this.topicProperty || this.editionProperty || this.yearProperty || this.tagProperty
@@ -235,16 +248,20 @@ export default {
         return this.query
       },
       set: function (value) {
+        this.lastSearchRequestChange = Date.now()
         this.query = value
         this.updateRoute(value, this.filter)
-        if (value && value.trim().length > 0) {
+        if (this.anyPresent) {
           this.executeRequest(true)
         }
       }
     },
     searchTokens: {
       get: function () {
-        return _.uniq(this.searchRequest.trim().replace(/\s\s+/g, ' ').split(' '))
+        let str = this.searchRequest.trim()
+        if (str != '')
+          return _.uniq(str.replace(/\s\s+/g, ' ').split(' '))
+        return []
       }
     },
     topicProperty: {
@@ -267,11 +284,11 @@ export default {
     },
     yearProperty: {
       get () {
-        return this.filter.year.value.length > 0
+        return this.filter.year.value !== null
       },
       set (value) {
         if (!value)
-          this.filter.year.value = []
+          this.filter.year.value = null
       }
     },
     tagProperty: {
@@ -294,6 +311,10 @@ export default {
     },
     allowRequest: function () {
       this.executeRequest(false)
+    },
+    anyPresent: function(newVal) {
+      if (!newVal)
+        this.$store.commit('search/disable')
     }
   },
   methods: {
@@ -313,6 +334,28 @@ export default {
       if (!_.isEqual(this.$route.query, object)) {
         this.$router.push({ path: '/', query: object})//{c: compressed}
       }
+    },
+    makeRequestData() {
+      let data = {
+          "filter": {
+          },
+          "tags": [],
+          "expression": this.searchRequest,
+          "is_regex": this.isRegularExpression,
+          "orderBy": "year",
+          "ordering": "ASC"
+      }
+      if (this.isRegularExpression)
+        data.expression = data.expression.substring(1,data.expression.length-1)
+      if (this.yearProperty)
+        data.filter.year = [this.filter.year.selector, this.filter.year.value]
+      if (this.topicProperty)
+        data.filter.topic = this.filter.topic.value
+      if (this.editionProperty)
+        data.filter.edition_text = this.filter.edition.value
+      if (this.tagProperty)
+        data.filter.tags = this.filter.tag.value
+      return data
     },
     fromRoute(query) {
       // if (!compressed_query.c)
@@ -364,11 +407,10 @@ export default {
       } catch (error) {
         this.regexErrorMessage = error.message
       }
-      return validate
+      return !!validate
     },
     executeRequest (force) {
-      if (!this.hasExpression && !this.isFilterPresent) {
-        this.$store.commit('search/clear')
+      if (!this.anyPresent) {
         return
       }
       if (force) {
@@ -387,16 +429,7 @@ export default {
       this.hideWelcome = true
       // import api from '@/api/search'
 
-      this.$store.dispatch('search/request', {
-          "filter": {
-              "year": ["gt", 2007]
-          },
-          "tags": [],
-          "expression": "[A-Za-z0-9]+",
-          "is_regex": true,
-          "orderBy": "year",
-          "ordering": "ASC"
-      })
+      this.$store.dispatch('search/request', this.makeRequestData())
     }
   }
 }

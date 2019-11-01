@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, request, abort
+from flask import Flask, send_from_directory, request, abort, Response
 from database import DudenDatabase
 import json
 import hashlib
@@ -35,6 +35,10 @@ def get_css(path):
 def get_manifest():
     return send_from_directory('dist/', 'manifest.json')
 
+@app.route('/corpus_meta.json')
+def get_corpus_meta():
+    return send_from_directory('dist/', 'corpus_meta.json')
+
 
 SEARCH_ARGUMENTS = {
     'filter':dict,
@@ -63,9 +67,10 @@ def search():
 @app.route('/api/search/', methods=['POST'], strict_slashes=False)
 @app.route('/api/search/<int:start>/', methods=['POST'], strict_slashes=False)
 def post_search(start=0):
-    app.logger.info(request.json)
     if request.json is None or len(set(SEARCH_ARGUMENTS.keys()).difference(set(request.json.keys()))) > 0:
         abort(400)
+    
+    app.logger.info(request.json)
     
     for k,v in request.json.items():
         if k not in SEARCH_ARGUMENTS.keys() or type(v) != SEARCH_ARGUMENTS[k]:
@@ -78,6 +83,18 @@ def post_search(start=0):
             'count': count,
             'results': results
         })
+
+@app.route('/api/download/<int:id>/', methods=['GET'], strict_slashes=False)
+def get_download(id):
+    # if request.json is None or len(set(SEARCH_ARGUMENTS.keys()).difference(set(request.json.keys()))) > 0:
+    #     abort(400)
+    r = db.get_rtf(id)
+    app.logger.info(r)
+    if not r:
+        return None
+    resp = Response(r[1], mimetype='text/xml')
+    resp.headers['Content-Disposition'] = 'attachment; filename="{}"'.format(r[0])
+    return resp
 
 @app.route("/")
 def webapp():
