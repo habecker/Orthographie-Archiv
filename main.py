@@ -6,7 +6,7 @@ import redis
 
 
 app = Flask(__name__, static_url_path='', static_folder='dist/')
-r = redis.Redis(host='localhost', port=6379, db=0)
+r = redis.Redis(host='redis', port=6379, db=0)
 r.flushall()
 
 db = DudenDatabase()
