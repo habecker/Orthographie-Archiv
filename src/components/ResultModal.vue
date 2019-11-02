@@ -64,7 +64,7 @@ export default {
                 Vue.nextTick()
                 .then(function () {
                     var container = $('section.modal-card-body')[0],
-                        scrollTo = $('.has-background-warning')[0];
+                        scrollTo = $('.is-highlighted-in-modal')[0];
                     if (container && scrollTo) {
                         container.scrollTop = scrollTo.offsetTop - 3*scrollTo.offsetHeight - container.offsetHeight/2// - container.offsetTop + container.scrollTop
                     }

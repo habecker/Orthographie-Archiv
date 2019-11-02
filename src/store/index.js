@@ -6,6 +6,62 @@ import api from '@/api/search'
 
 
 Vue.use(Vuex)
+// var regexp = new RegExp('amet', 'gi');
+
+// var str = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Neque viverra justo nec ultrices dui sapien eget mi proin. Lobortis elemenamet nibh tellus molestie nunc non. Tincidunt praesent semper feugiat nibh sed pulvinar. Tellus at urna condimentum mattis. Sem nulla pharetra diam sit amet nisl suscipit. Ac tortor vitae purus faucibus ornare suspendisse sed nisi lacus. Viverra adipiscing at in tellus. Arcu cursus vitae congue mauris rhoncus aenean. Eget est lorem ipsum dolor sit amet consectetur adipiscing. Pellentesque nec nam aliquam sem et. Netus et malesuada fames ac turpis egestas sed tempus. At imperdiet dui accumsan sit amet nulla facilisi. Nisl purus in mollis nunc. Fusce ut placerat orci nulla pellentesque. Magna fringilla urna porttitor rhoncus dolor purus non enim praesent. Vitae semper quis lectus nulla at ut volutpat diam ut';
+
+function thumbnail(regexp, str) {
+  var window_size = 200
+  var current_window = 0
+  var current_count = 0
+  var windows = []
+  var matchs = []
+  var pos
+  var match = regexp.exec(str)
+
+  while (match) {
+      matchs.push(match)
+      pos = [match.index, match.index + match[0].length]
+      
+      if (pos[0] < current_window + window_size) {
+          current_count += 1
+      } else {
+          if (current_count > 0)
+              windows.push([current_window, current_count])
+          current_window = pos[0] - window_size/2 + match[0].length/2
+          current_count = 1
+      }
+      match = regexp.exec(str)
+  }
+  if (current_count > 0)
+      windows.push([current_window, current_count])
+
+  var iwindow = 0;
+  if (windows.length > 0)
+      iwindow = _.maxBy(windows, (w) => w[1])[0]
+
+  var thumbnail = '…'
+  var last_index = iwindow + window_size
+  _.forEach(_.reverse(matchs), (match) => {
+      console.log([match.index + match[0].length, iwindow + window_size])
+      if (match.index < iwindow) {
+          return false
+      } else if (match.index + match[0].length < iwindow + window_size) {
+          thumbnail = str.substring(match.index + match[0].length, last_index) + thumbnail
+          thumbnail = '<span class="has-background-warning">' + str.substring(match.index, match.index + match[0].length) + '</span>' + thumbnail
+          last_index = match.index
+      } else if (match.index < iwindow + window_size) {
+          thumbnail = '<span class="has-background-warning">' + str.substring(match.index, _.min([iwindow + window_size+1, match.index + match[0].length])) + '</span>' + thumbnail
+          last_index = match.index
+      }
+  })
+
+  thumbnail = str.substring(iwindow, last_index) + thumbnail
+
+  if (iwindow > 0)
+      thumbnail = '…' + thumbnail
+  return thumbnail
+}
 
 function getSearchTokens(expression) {
   let str = _.escape(expression.trim())
@@ -14,17 +70,24 @@ function getSearchTokens(expression) {
   return []
 }
 
-function markSearchResults(state, html) {
+function getRegEx(state) {
   if (!state.searchRequest.expression || state.searchRequest.expression.trim().length == 0)
-    return html
+    return null
   if (state.searchRequest.is_regex) {
-    return markSearchResultsRegEx(new RegExp(state.searchRequest.expression, "g"), html)
+    return new RegExp(state.searchRequest.expression, "g")
   }
-  return markSearchResultsRegEx(new RegExp('(' + getSearchTokens(state.searchRequest.expression).join('|') + ')', "ig"), html)
+  return new RegExp('(' + getSearchTokens(state.searchRequest.expression).join('|') + ')', "ig")
+}
+
+function markSearchResults(state, html) {
+  var regex = getRegEx(state)
+  if (regex == null)
+    return html
+  return markSearchResultsRegEx(regex, html)
 }
 
 function markSearchResultsRegEx(regexp, html) {
-  return html.replace(regexp,"<span class=\"has-background-warning\">$&</span>")
+  return html.replace(regexp,"<span class=\"has-background-warning is-highlighted-in-modal\">$&</span>")
 }
 
 export default new Vuex.Store({
@@ -52,6 +115,7 @@ export default new Vuex.Store({
           'tags': row[6].split('\t'),
           'text': row[7],
           'html': markSearchResults(state, row[8]),
+          'thumbnail': thumbnail(getRegEx(state), Vue.filter('cleanText')(row[7]))
         }
       }))
       state.results_start = data.start

@@ -61,11 +61,11 @@
                 <p class="is-size-8"  :class="{'has-tooltip-bottom': r['file'].length > 40}" :data-tooltip="r['file']"><strong>{{ r['file'] | maxnchars(40)}}</strong></p>  
             </div>
             <div class="column is-3 has-text-justified is-size-8 is-hidden-touch">
-                <p>{{ r['text'] | cleanText | maxnchars(200)}}</p>
+                <p v-html="r['thumbnail']"></p>
             </div>
             <div class="column is-6 has-text-justified is-size-8 is-hidden-desktop">
                 <p class="is-size-8"  :class="{'has-tooltip-bottom': r['file'].length > 40}" :data-tooltip="r['file']"><strong>{{ r['file'] | maxnchars(40)}}</strong></p>
-                <p>{{ r['text'] | cleanText | maxnchars(200)}}</p>
+                <p v-html="r['thumbnail']"></p>
             </div>
             <div class="column is-2 is-clearfix">
                 <div class="field is-grouped is-expanded is-pulled-right">
