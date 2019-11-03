@@ -37,7 +37,7 @@ def get_manifest():
 
 @app.route('/corpus_meta.json')
 def get_corpus_meta():
-    return send_from_directory('dist/', 'corpus_meta.json')
+    return send_from_directory('./', 'corpus_meta.json')
 
 
 SEARCH_ARGUMENTS = {
@@ -97,6 +97,9 @@ def get_download(id):
     return resp
 
 @app.route("/")
+@app.route("/imprint")
+@app.route("/about")
+@app.route("/privacy")
 def webapp():
     return app.send_static_file('index.html')
 

@@ -1,6 +1,9 @@
 <template>
   <section class="section">
-    <div class="box" v-html="text">
+    <div class="box">
+      <h1 class="title" v-html="texts.imprint.title">Section</h1>
+      <div class="container" v-html="text">
+      </div>
     </div>
   </section>
 </template>
@@ -9,7 +12,7 @@ import texts from '@/texts'
 
 
 export default {
-  name: 'About',
+  name: 'Imprint',
   data() {
     return {
       texts: texts,
@@ -19,14 +22,8 @@ export default {
   },
   computed: {
     text: function () {
-      return this.texts.welcome.about.replace(this.mail_key, this.mail_name)
+      return this.texts.imprint.html.replace(this.mail_key, this.mail_name)
     }
   }
 }
 </script>
-<style>
-  p {
-    margin-bottom:1rem;
-    font-size:0.75rem;
-  }
-</style>

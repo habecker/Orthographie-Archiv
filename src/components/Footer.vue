@@ -13,10 +13,10 @@
         <div class="column"></div>
         <div class="column"></div>
         <div class="column">
-            <router-link to="/">Impressum</router-link>
+          <router-link to="/imprint">Impressum</router-link>
         </div>
         <div class="column">
-            <router-link to="/">Datenschutz</router-link>
+          <router-link to="/privacy">Datenschutz</router-link>
         </div>
         <div class="column"></div>
         <div class="column"></div>

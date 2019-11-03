@@ -12,6 +12,9 @@ Vue.use(Vuex)
 
 function thumbnail(regexp, str) {
   var window_size = 200
+
+  if (regexp == null)
+    return str.substr(0, _.min([200, str.length])) + '…'
   var current_window = 0
   var current_count = 0
   var windows = []
@@ -20,6 +23,8 @@ function thumbnail(regexp, str) {
   var match = regexp.exec(str)
 
   while (match) {
+      if (match[0].length == 0)
+        return Vue.filter('maxnchars')(str, 200) + '…'
       matchs.push(match)
       pos = [match.index, match.index + match[0].length]
       
@@ -43,7 +48,6 @@ function thumbnail(regexp, str) {
   var thumbnail = '…'
   var last_index = iwindow + window_size
   _.forEach(_.reverse(matchs), (match) => {
-      console.log([match.index + match[0].length, iwindow + window_size])
       if (match.index < iwindow) {
           return false
       } else if (match.index + match[0].length < iwindow + window_size) {
@@ -155,7 +159,6 @@ export default new Vuex.Store({
   },
   actions: {
     'search/request': function ({ commit }, searchRequest) {
-      console.log("IH")
       commit('search/setActive')
       commit('search/setRequest', searchRequest)
       api.search(searchRequest).then((response) => {

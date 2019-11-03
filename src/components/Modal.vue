@@ -39,7 +39,6 @@ export default {
     watch: {
       value: function (newVal) {
         // Modal scroll bug workaround
-        console.log("HI")
         if(newVal) {
           this.lastScroll = $('html').scrollTop()
           $('html').css('overflow', 'hidden')

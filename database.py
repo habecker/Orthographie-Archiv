@@ -14,6 +14,9 @@ assert sys.getfilesystemencoding() == 'utf-8'
 ALLOWED_STATEMENTS = re.compile('^[A-Za-z_]+$')
 FILTER_KEYS = set(['topic', 'year', 'edition', 'edition_text', 'tags'])
 
+SPACES_REGEX = re.compile('\s\s+')
+NEWLINE_REGEX = re.compile('(\r?\n)')
+
 class DudenDatabase(object):
     def __init__(self, database_filename='duden.db'):
         self.h2t = html2text.HTML2Text()
@@ -75,7 +78,7 @@ class DudenDatabase(object):
         #    if lines[i] == '-----------------':
         #        return '\n'.join(lines[i+1:])
         #return '\n'.join(lines)
-        return self.h2t.handle(self.h2t.unescape(self._rtf_to_html(fp)))
+        return SPACES_REGEX.sub(' ', NEWLINE_REGEX.sub(' ', self.h2t.handle(self.h2t.unescape(self._rtf_to_html(fp)))))
 
 
     def _rtf_to_html(self, fp):
@@ -98,10 +101,10 @@ class DudenDatabase(object):
 
     def search(self, expression:str, filter:dict, is_regex=False, orderBy = 'year', ordering = 'ASC'):
         if filter and len(set(filter.keys()).difference(FILTER_KEYS)) > 0:
-            raise Exception("invalid parameters")
+            raise Exception("invalid filter parameters")
         if not ALLOWED_STATEMENTS.match(orderBy) or not ALLOWED_STATEMENTS.match(ordering):
-            raise Exception("invalid parameters")
-        if expression.strip() == '' and len(filter.keys()) == 0:
+            raise Exception("invalid order pameters")
+        if (expression.strip() == '' and not is_regex) and len(filter.keys()) == 0:
             raise Exception("invalid parameters")
 
         query_string = 'SELECT rowid, file, topic, year, edition, edition_text, tags, text, html FROM files'
@@ -168,5 +171,5 @@ if __name__ == "__main__":
         'topics': list(sorted(set([r[1] for r in data ]))),
         'editions': editions,
     }
-    with open('dist/corpus_meta.json', 'w', encoding='utf-8') as f:
+    with open('./corpus_meta.json', 'w', encoding='utf-8') as f:
         json.dump(corpus_meta_data, f)

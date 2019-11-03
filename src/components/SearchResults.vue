@@ -9,7 +9,7 @@
                 <button class="button is-small"><span class="icon"><csv-icon aria-label="CSV-Export"/></span> <span>Export</span></button>
             </div>
             <div class="column is-3 is-clearfix">
-                <div class="field is-grouped is-pulled-right">
+                <!-- <div class="field is-grouped is-pulled-right">
                     <div class="control is-marginless">
                         <button class="button is-small"><sort-asc-icon aria-label="Absteigende Sortierung"/></button>
                     </div>
@@ -22,7 +22,7 @@
                             </select>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
         <div v-for="r in $store.state.results" :key="r['id']" :id="'row_'+r['id']" class="columns is-vcentered result-columns is-size-8">

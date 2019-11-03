@@ -4,21 +4,23 @@
       <section v-if="!hideWelcome" class="hero">
         <div class="hero-body">
           <div class="container">
-            <h1 class="title">
-              Hero title
-            </h1>
-            <h2 class="subtitle">
-              Hero subtitle
-            </h2>
+            <div class="notification has-text-justified">
+              <div class="columns is-vcentered">
+                <div class="column" v-html="texts.welcome.intro"></div>
+                <div class="column has-text-centered is-expanded">
+                  <router-link class="button is-outlined is-rounded is-info" to="/about">Mehr Informationen</router-link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </transition>
     <div class="container" id="search-container">
-    <div class="notification">
+    <div class="box">
       <div class="field is-grouped">
         <div class="control is-medium has-icons-left is-expanded">
-          <input class="input is-medium" type="text" placeholder="Volltextsuche" v-model="searchRequest">
+          <input class="input is-medium" :class="{'is-focused': !hideWelcome}" type="text" placeholder="Volltextsuche" v-model="searchRequest">
           <span class="icon is-medium is-left">
             <regexp-icon aria-label="Regulärer Ausdruck" v-if="isRegularExpression"/>
             <search-icon  aria-label="Normale Suche" v-else/>
@@ -76,7 +78,7 @@
                   </span>
                   <div class="field">
                     <div class="control is-expanded">
-                      <multiselect v-model="filter.topic.value" :options=" $store.state.corpusMeta.topics" :show-labels="false" placeholder="Auflagen durchsuchen" multiple></multiselect>
+                      <multiselect v-model="filter.topic.value" :options=" $store.state.corpusMeta.topics" :show-labels="false" placeholder="Themen durchsuchen" multiple></multiselect>
                     </div>
                   </div>
                 </div>
@@ -183,6 +185,8 @@
 <script>
 import Vue from 'vue'
 import _ from 'lodash'
+import texts from '@/texts'
+
 // import LZUTF8 from 'lzutf8'
 
 const SEARCH_INTERVAL = 1000
@@ -201,6 +205,7 @@ export default {
       lastSearchRequestChange: 0,
       didRequest: false,
       now: 0,
+      texts: texts,
       filter: {
         ordering: 'ASC',
         orderBy: 'year',
@@ -420,13 +425,13 @@ export default {
       if (this.didRequest) {
         return
       }
+      this.hideWelcome = true
       if (!this.allowRequest) {
         this.didRequest = false
         return
       }
       this.lastRequest = Date.now()
       this.didRequest = true
-      this.hideWelcome = true
       // import api from '@/api/search'
 
       this.$store.dispatch('search/request', this.makeRequestData())

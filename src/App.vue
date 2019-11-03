@@ -1,11 +1,6 @@
 <template>
   <div id="app">
     <navigation/>
-<!--     
-    <div id="nav">
-      <router-link to="/">Suche</router-link> |
-      <router-link to="/about">About</router-link>
-    </div> -->
     <router-view/>
     <footer-navigation/>
   </div>
