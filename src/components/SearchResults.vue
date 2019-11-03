@@ -1,12 +1,15 @@
 <template>
   <div v-if="$store.state.searchRequest" class="container is-fullhd">
-    <div class="box">
+    <div v-if="$store.state.results_count == 0 && !$store.state.searchActive" class="box has-text-centered">
+        Keine Treffer
+    </div>
+    <div v-else class="box">
         <div class="columns is-size-8 has-text-centered is-vcentered">
             <div class="column is-3">
                 <div class="is-pulled-left">{{ $store.state.results_count }} Treffer</div>
             </div>
             <div class="column is-6">
-                <button class="button is-small"><span class="icon"><csv-icon aria-label="CSV-Export"/></span> <span>Export</span></button>
+                <!-- <button class="button is-small"><span class="icon"><csv-icon aria-label="CSV-Export"/></span> <span>Exportieren</span></button> -->
             </div>
             <div class="column is-3 is-clearfix">
                 <!-- <div class="field is-grouped is-pulled-right">

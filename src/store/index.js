@@ -9,6 +9,66 @@ Vue.use(Vuex)
 // var regexp = new RegExp('amet', 'gi');
 
 // var str = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Neque viverra justo nec ultrices dui sapien eget mi proin. Lobortis elemenamet nibh tellus molestie nunc non. Tincidunt praesent semper feugiat nibh sed pulvinar. Tellus at urna condimentum mattis. Sem nulla pharetra diam sit amet nisl suscipit. Ac tortor vitae purus faucibus ornare suspendisse sed nisi lacus. Viverra adipiscing at in tellus. Arcu cursus vitae congue mauris rhoncus aenean. Eget est lorem ipsum dolor sit amet consectetur adipiscing. Pellentesque nec nam aliquam sem et. Netus et malesuada fames ac turpis egestas sed tempus. At imperdiet dui accumsan sit amet nulla facilisi. Nisl purus in mollis nunc. Fusce ut placerat orci nulla pellentesque. Magna fringilla urna porttitor rhoncus dolor purus non enim praesent. Vitae semper quis lectus nulla at ut volutpat diam ut';
+var htmlEntities = {
+  nbsp: ' ',
+  cent: '¢',
+  pound: '£',
+  yen: '¥',
+  euro: '€',
+  copy: '©',
+  reg: '®',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  amp: '@',
+  apos: '\'',
+  auml: 'ä',
+  ouml: 'ü',
+  uuml: 'ö',
+  Auml: 'Ä',
+  Ouml: 'Ü',
+  Uuml: 'Ö',
+  szlig: 'ß',
+  raquo: '»',
+  laquo: '«',
+  ccedil: 'ç',
+  ndash: '–',
+  uarr: '↑',
+  aacute: 'á',
+  atilde: 'ã',
+  bdquo: '„',
+  ldquo: '“',
+  ecirc: 'ê',
+  agrave: 'à',
+  eacute: 'é',
+  lsquo: '‘',
+  sect: '§',
+  iuml: 'ï',
+  rsquo: '’'
+};
+
+window.codes = []
+
+
+function unescapeHTML(str) {
+  let s = str.replace(/&([^;]+);/g, function (entity, entityCode) {
+      var match;
+
+      if (entityCode in htmlEntities) {
+          return htmlEntities[entityCode];
+          /*eslint no-cond-assign: 0*/
+      } else if (match = entityCode.match(/^#x([\da-fA-F]+)$/)) {
+          return String.fromCharCode(parseInt(match[1], 16));
+          /*eslint no-cond-assign: 0*/
+      } else if (match = entityCode.match(/^#(\d+)$/)) {
+          return String.fromCharCode(~~match[1]);
+      } else {
+          window.codes.push(entity)
+          return entity;
+      }
+  })
+  return s
+}
 
 function thumbnail(regexp, str) {
   var window_size = 200
@@ -68,23 +128,23 @@ function thumbnail(regexp, str) {
 }
 
 function getSearchTokens(expression) {
-  let str = _.escape(expression.trim())
+  let str = expression.trim()
   if (str != '')
     return _.uniq(str.replace(/\s\s+/g, ' ').split(' '))
   return []
 }
 
-function getRegEx(state) {
+function getRegEx(state, replace_amp) {
   if (!state.searchRequest.expression || state.searchRequest.expression.trim().length == 0)
     return null
   if (state.searchRequest.is_regex) {
-    return new RegExp(state.searchRequest.expression, "g")
+    return new RegExp(replace_amp? state.searchRequest.expression.replace('&', '@') : state.searchRequest.expression, "gu")
   }
-  return new RegExp('(' + getSearchTokens(state.searchRequest.expression).join('|') + ')', "ig")
+  return new RegExp('(' + getSearchTokens(replace_amp? state.searchRequest.expression.replace('&', '@') : state.searchRequest.expression).join('|') + ')', "igu")
 }
 
 function markSearchResults(state, html) {
-  var regex = getRegEx(state)
+  var regex = getRegEx(state, true)
   if (regex == null)
     return html
   return markSearchResultsRegEx(regex, html)
@@ -118,7 +178,7 @@ export default new Vuex.Store({
           'edition_text': row[5],
           'tags': row[6].split('\t'),
           'text': row[7],
-          'html': markSearchResults(state, row[8]),
+          'html': markSearchResults(state, unescapeHTML(row[8])).replace('@', '&amp;'),
           'thumbnail': thumbnail(getRegEx(state), Vue.filter('cleanText')(row[7]))
         }
       }))

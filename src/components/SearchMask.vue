@@ -352,6 +352,8 @@ export default {
       }
       if (this.isRegularExpression)
         data.expression = data.expression.substring(1,data.expression.length-1)
+      else
+        data.expression = _.escapeRegExp(data.expression)
       if (this.yearProperty)
         data.filter.year = [this.filter.year.selector, this.filter.year.value]
       if (this.topicProperty)
@@ -373,7 +375,7 @@ export default {
       //   return
       // }
 
-      if (query.year && query.selector && isNaN(query.year) && /(le|lt|gt|ge|eq)/.match(query.selector)) {
+      if (query.year && query.selector && !isNaN(query.year) && /(le|lt|gt|ge|eq)/.exec(query.selector)) {
         this.filter.year.value = query.year 
         this.filter.year.selector = query.selector
       }

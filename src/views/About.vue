@@ -1,6 +1,6 @@
 <template>
   <section class="section">
-    <div class="box" v-html="text">
+    <div class="box" id="about" v-html="text">
     </div>
   </section>
 </template>
@@ -25,8 +25,4 @@ export default {
 }
 </script>
 <style>
-  p {
-    margin-bottom:1rem;
-    font-size:0.75rem;
-  }
 </style>

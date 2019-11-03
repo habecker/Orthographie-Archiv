@@ -40,6 +40,14 @@ html,body{
     }
   }
 }
+
+#about, #imprint {
+  p {
+    font-size:0.75rem;
+    margin-bottom:1rem !important;
+  }
+}
+
 </style>
 
 <style lang="sass">

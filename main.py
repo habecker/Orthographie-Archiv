@@ -58,9 +58,9 @@ def search():
     if cached is None:
         result = db.search(request.json['expression'], filter=request.json['filter'], is_regex=request.json['is_regex'], orderBy=request.json['orderBy'], ordering=request.json['ordering'])
         r.set(md5, json.dumps(result))
-        r.expire(md5, 30*5)
+        r.expire(md5, 60*60*24)
         return md5, result
-    r.expire(md5, 30*5)
+    r.expire(md5, 60*60*24)
     return md5, json.loads(cached)
 
 
@@ -93,7 +93,7 @@ def get_download(id):
     if not r:
         return None
     resp = Response(r[1], mimetype='text/xml')
-    resp.headers['Content-Disposition'] = 'attachment; filename="{}"'.format(r[0])
+    resp.headers['Content-Disposition'] = 'attachment; filename="{}"'.format(r[0].encode('ISO-8859-1'))
     return resp
 
 @app.route("/")
