@@ -3,6 +3,11 @@ from database import DudenDatabase
 import json
 import hashlib
 import redis
+import unicodedata
+
+def strip_accents(s):
+   return ''.join(c for c in unicodedata.normalize('NFD', s)
+                  if unicodedata.category(c) != 'Mn')
 
 
 app = Flask(__name__, static_url_path='', static_folder='dist/')
@@ -89,11 +94,10 @@ def get_download(id):
     # if request.json is None or len(set(SEARCH_ARGUMENTS.keys()).difference(set(request.json.keys()))) > 0:
     #     abort(400)
     r = db.get_rtf(id)
-    app.logger.info(r)
     if not r:
         return None
     resp = Response(r[1], mimetype='text/xml')
-    resp.headers['Content-Disposition'] = 'attachment; filename="{}"'.format(r[0].encode('ISO-8859-1'))
+    resp.headers['Content-Disposition'] = 'attachment; filename="{}"'.format(strip_accents(r[0]))
     return resp
 
 @app.route("/")
